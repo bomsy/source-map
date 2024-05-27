@@ -8,3 +8,13 @@ exports.SourceMapGenerator =
 exports.SourceMapConsumer =
   require("./lib/source-map-consumer").SourceMapConsumer;
 exports.SourceNode = require("./lib/source-node").SourceNode;
+
+// Re-export the tag constants.
+var tags = require('./lib/tags');
+Object.getOwnPropertyNames(tags).forEach(function (tag) {
+  Object.defineProperty(exports, tag, {
+    writable: false,
+    configurable: false,
+    value: tags[tag]
+  });
+});

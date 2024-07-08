@@ -39,7 +39,7 @@ const scopeNames = ["n", "f", "x", "y", "a", "b", "c", "d"];
 const encodedOriginalScopes = ["AACAAC,EUECCEG,AkCIAA,IC,AC,EK"];
 const encodedGeneratedRanges = "AKAAOQ;;UKACSU,wBKACO;;;;C,A;;K";
 
-const originalScopes = [
+const expectedOriginalScopes = [
   {
     start: { sourceIndex: 0, line: 0, column: 0 },
     end: { sourceIndex: 0, line: 8, column: 5 },
@@ -66,7 +66,43 @@ const originalScopes = [
   }
 ];
 
+const expectedGeneratedRanges = {
+  start: { line: 0, column: 0 },
+  end: { line: 8, column: 5 },
+  isScope: true,
+  original: {
+    scope: expectedOriginalScopes[0],
+    bindings: ["a", "b"]
+  },
+  children: [
+    {
+      start: { line: 2, column: 10 },
+      end: { line: 6, column: 1 },
+      isScope: true,
+      original: {
+        scope: expectedOriginalScopes[0].children[0],
+        bindings: ["c", "d"]
+      },
+      children: [
+        {
+          start: { line: 2, column: 34 },
+          end: { line: 6, column: 1 },
+          isScope: true,
+          original: {
+            scope: expectedOriginalScopes[0].children[0].children[0],
+            bindings: ["a"]
+          }
+        }
+      ]
+    },
+  ]
+};
+
 exports["test decoded scopes from sourcemap"] = function(assert) {
   const scopes = new Scopes();
-  assert.equal(scopes.decodeOriginalScopes(encodedOriginalScopes, scopeNames), originalScopes);
+  scopes.decodeOriginalScopes(encodedOriginalScopes, scopeNames);
+  scopes.decodeGeneratedRanges(encodedGeneratedRanges, scopeNames);
+
+  // assert.equal(scopes.originalScopes.values(), expectedOriginalScopes);
+  assert.equal(scopes.generatedRanges, expectedGeneratedRanges)
 };

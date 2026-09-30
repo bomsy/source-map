@@ -39,3 +39,18 @@ jobs:
           override: true
           default: true
       - run: JOB=${{ matrix.job }} ./ci/script.sh
+
+  dist:
+    name: WASM binary is reproducible
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # No toolchain override here on purpose: the build must use the version
+      # pinned in wasm-mappings/rust-toolchain.toml for the byte comparison
+      # to be meaningful.
+      # wasm-pack vendors its own wasm-bindgen and wasm-opt, so this is the
+      # only tool the build needs.
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: "v0.15.0"
+      - run: JOB=wasm-dist ./ci/script.sh

@@ -1,6 +1,5 @@
 #![deny(missing_debug_implementations)]
 
-extern crate rand;
 extern crate vlq;
 
 pub mod comparators;

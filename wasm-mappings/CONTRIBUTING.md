@@ -8,28 +8,29 @@ To build the core library for the host target (for use with testing):
 $ cargo build
 ```
 
-To build for WebAssembly, ensure that you have the `wasm32-unknown-unknown` target:
+To build the WebAssembly module and its JS glue, use the build script in this
+directory:
 
 ```
-$ rustup update
-$ rustup target add wasm32-unknown-unknown --toolchain nightly
+$ ./build.sh
 ```
 
-Then, cross compile to a `.wasm` file via the WebAssembly API crate:
+That runs [`wasm-pack`](https://rustwasm.github.io/wasm-pack/) twice -- once
+for the `nodejs` target and once for `web` -- and installs the results into
+`../lib/`. Both targets produce an identical `.wasm`; only the JS glue
+differs, and the script fails if they ever diverge.
 
-```
-$ cd source-map-mappings-wasm-api/
-$ ./build.py -o output.wasm
-```
+`wasm-pack` is the only tool you need to install: it vendors its own
+`wasm-bindgen` and `wasm-opt`. The toolchain version is pinned in
+`rust-toolchain.toml`, including the `wasm32-unknown-unknown` target, so
+`rustup` will fetch whatever is missing.
 
-The `build.py` script handles shrinking the size of the resulting `.wasm` file
-for you, with `wasm-gc`, `wasm-snip`, and `wasm-opt`.
+Set `PROFILING=1` to enable the `profiling` cargo feature.
 
-For more details, run:
-
-```
-$ ./build.py --help
-```
+The generated artifacts are committed to the repository, and the `wasm-dist`
+CI job rebuilds them and fails if they differ byte-for-byte. If you change
+anything under `wasm-mappings/`, re-run `./build.sh` and commit the result in
+the same change.
 
 ## Testing
 
@@ -41,17 +42,12 @@ $ cargo test
 
 ## Automatic code formatting
 
-We use [`rustfmt`](https://github.com/rust-lang-nursery/rustfmt) to enforce a
+We use [`rustfmt`](https://github.com/rust-lang/rustfmt) to enforce a
 consistent code style across the whole code base.
 
-You can install the latest version of `rustfmt` with this command:
-
 ```
-$ rustup update nightly
-$ cargo install -f rustfmt-nightly
+$ rustup component add rustfmt
 ```
-
-Ensure that `~/.cargo/bin` is on your path.
 
 Once that is taken care of, you can (re)format all code by running this command:
 

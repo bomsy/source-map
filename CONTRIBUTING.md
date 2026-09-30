@@ -134,40 +134,52 @@ Ensure that you have the Rust toolchain installed:
 $ curl https://sh.rustup.rs -sSf | sh
 ```
 
-The `wasm32-unknown-unknown` target is nightly-only at the time of writing. Use
-`rustup` to ensure you have it installed:
+The exact toolchain version is pinned in `wasm-mappings/rust-toolchain.toml`
+and `rustup` will install it on demand, including the
+`wasm32-unknown-unknown` target.
+Note: The pin exists because CI rebuilds the
+committed artifacts and fails if they differ byte-for-byte, which only works
+if everyone builds with the same compiler.
+
+Install [`wasm-pack`](https://rustwasm.github.io/wasm-pack/), which is the
+only other tool required -- it vendors its own `wasm-bindgen` and `wasm-opt`:
 
 ```
-$ rustup toolchain install nightly
-$ rustup target add wasm32-unknown-unknown --toolchain nightly
-```
-
-Move to wasm sources folder:
-
-```
-$ cd wasm-mappings/
+$ cargo install wasm-pack
 ```
 
 Make sure the crate's tests pass:
 
 ```
+$ cd wasm-mappings/
 $ cargo test
 ```
 
-Ensure that you have the following wasm post-processing tools installed:
-
-- `wasm-nm`: https://github.com/fitzgen/wasm-nm
-- `wasm-gc`: https://github.com/alexcrichton/wasm-gc
-- `wasm-snip`: https://github.com/fitzgen/wasm-snip
-- `wasm-opt`: https://github.com/WebAssembly/binaryen
-
-(These dependencies should automatically be installed by cargo)
-
-Build Rust crate as a `.wasm` file:
+Then rebuild the shipped artifacts:
 
 ```
-$ cd source-map-mappings-wasm-api/
-$ ./build.py -o ../../lib/mappings.wasm
+$ ./build.sh
 ```
 
-See further information in [wasm-mappings/CONTRIBUTING.md].
+This writes five files into `lib/`:
+
+| File                          | Purpose                                      |
+| ----------------------------- | -------------------------------------------- |
+| `mappings.wasm`               | the WebAssembly module itself                |
+| `mappings-glue.js`            | `wasm-bindgen` glue for Node (CommonJS)      |
+| `mappings-glue.d.ts`          | types for the above node glue file           |
+| `mappings-glue-browser.mjs`   | `wasm-bindgen` glue for browsers (ES module) |
+| `mappings-glue-browser.d.mts` | types for the above browser glue file        |
+
+All five are generated and committed; do not edit them by hand. `package.json`'s
+`browser` field swaps `lib/read-wasm.js` for `lib/read-wasm-browser.js`, which
+is what selects between the Node and browser glue.
+
+Set `PROFILING=1` to enable the crate's `profiling` feature, which wraps each
+query in a `console.time` / `console.timeEnd` pair:
+
+```
+$ PROFILING=1 ./build.sh
+```
+
+See further information in [wasm-mappings/CONTRIBUTING.md](wasm-mappings/CONTRIBUTING.md).

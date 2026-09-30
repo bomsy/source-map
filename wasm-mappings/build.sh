@@ -48,8 +48,13 @@ cp pkg-node/mappings_bg.wasm "$LIB/mappings.wasm"
 sed -e "s/mappings_bg\.wasm/mappings.wasm/g" \
     -e 's|"\./mappings\.d\.ts"|"./mappings-glue.d.ts"|' \
     pkg-node/mappings.js > "$LIB/mappings-glue.js"
+# `read-wasm-browser.js` always passes the module bytes or URL explicitly, so
+# wasm-bindgen's `new URL(..., import.meta.url)` fallback is unreachable here.
+# Replace it with a throw: `import.meta` is a hard parse error in webpack 4 and
+# other pre-2020 bundlers, which would otherwise break any consumer using them.
 sed -e "s/mappings_bg\.wasm/mappings.wasm/g" \
     -e 's|"\./mappings\.d\.ts"|"./mappings-glue-browser.d.mts"|' \
+    -e 's|^.*import\.meta\.url.*$|        throw new Error("You must provide the string URL or ArrayBuffer contents of lib/mappings.wasm by calling SourceMapConsumer.initialize() before using SourceMapConsumer");|' \
     pkg-web/mappings.js > "$LIB/mappings-glue-browser.mjs"
 
 cp pkg-node/mappings.d.ts "$LIB/mappings-glue.d.ts"
@@ -57,5 +62,6 @@ cp pkg-web/mappings.d.ts "$LIB/mappings-glue-browser.d.mts"
 
 # Nothing should still point at the wasm-pack-internal name.
 ! grep -q "mappings_bg\.wasm" "$LIB/mappings-glue.js" "$LIB/mappings-glue-browser.mjs"
+! grep -q "import\.meta" "$LIB/mappings-glue-browser.mjs"
 
 echo "built $(wc -c < "$LIB/mappings.wasm") byte lib/mappings.wasm"

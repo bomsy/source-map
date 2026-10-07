@@ -3,7 +3,11 @@
 # Build `lib/mappings.wasm` and its wasm-bindgen glue.
 #
 # Requires `wasm-pack` (https://rustwasm.github.io/wasm-pack/), which vendors
-# its own `wasm-bindgen` and `wasm-opt` -- there is nothing else to install.
+# its own `wasm-bindgen`, and binaryen's `wasm-opt` at exactly
+# $WASM_OPT_VERSION on PATH. wasm-pack prefers a `wasm-opt` from PATH and only
+# downloads its own (an older binaryen) when there is none, and different
+# binaryen versions produce different bytes, so the version is pinned here
+# rather than left to whatever happens to be installed.
 #
 # Two targets are built because the package is CommonJS but also supports
 # browsers via `package.json#browser`:
@@ -16,6 +20,20 @@
 # Set PROFILING=1 to enable the `profiling` cargo feature.
 
 set -eu
+
+# Keep in sync with BINARYEN_VERSION in .github/workflows/cargo.yml.
+WASM_OPT_VERSION=132
+if ! WASM_OPT_ACTUAL="$(wasm-opt --version 2>/dev/null)"; then
+    echo "error: wasm-opt (binaryen version $WASM_OPT_VERSION) not found on PATH" >&2
+    exit 1
+fi
+case "$WASM_OPT_ACTUAL" in
+    "wasm-opt version $WASM_OPT_VERSION "*|"wasm-opt version $WASM_OPT_VERSION") ;;
+    *)
+        echo "error: need binaryen version $WASM_OPT_VERSION, found: $WASM_OPT_ACTUAL" >&2
+        exit 1
+        ;;
+esac
 
 cd "$(dirname "$0")"
 REPO_ROOT="$(pwd)/.."

@@ -141,12 +141,19 @@ Note: The pin exists because CI rebuilds the
 committed artifacts and fails if they differ byte-for-byte, which only works
 if everyone builds with the same compiler.
 
-Install [`wasm-pack`](https://rustwasm.github.io/wasm-pack/), which is the
-only other tool required -- it vendors its own `wasm-bindgen` and `wasm-opt`:
+Install [`wasm-pack`](https://rustwasm.github.io/wasm-pack/), which vendors
+its own `wasm-bindgen`:
 
 ```
 $ cargo install wasm-pack
 ```
+
+You also need `wasm-opt` from [binaryen](https://github.com/WebAssembly/binaryen)
+**version 132** on your `PATH` (for example `brew install binaryen`, or a
+[release download](https://github.com/WebAssembly/binaryen/releases/tag/version_132)).
+`build.sh` refuses to run with any other version: without one on `PATH`,
+wasm-pack falls back to downloading an older binaryen, whose output does not
+match the committed `lib/mappings.wasm`.
 
 Make sure the crate's tests pass:
 

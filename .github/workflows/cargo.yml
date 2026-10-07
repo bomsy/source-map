@@ -38,7 +38,12 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           override: true
           default: true
+      # `override: true` sets a directory override on the repo root, but the
+      # nearer wasm-mappings/rust-toolchain.toml takes precedence over it, so
+      # select the matrix toolchain explicitly.
       - run: JOB=${{ matrix.job }} ./ci/script.sh
+        env:
+          RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
 
   dist:
     name: WASM binary is reproducible

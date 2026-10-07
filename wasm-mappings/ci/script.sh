@@ -7,6 +7,10 @@ case "$JOB" in
         cargo test
         ;;
     "bench")
+        # The benches use `#![feature(test)]`, so they need nightly rather than
+        # the stable toolchain pinned in rust-toolchain.toml. An explicit
+        # RUSTUP_TOOLCHAIN (as set by CI) still wins.
+        export RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-nightly}"
         cargo bench
         ;;
     "wasm")

@@ -2,6 +2,10 @@
 
 set -eux
 
+# Everything below expects to run from wasm-mappings/, both for the relative
+# paths and so that rustup picks up wasm-mappings/rust-toolchain.toml.
+cd "$(dirname "$0")/.."
+
 case "$JOB" in
     "test")
         cargo test
